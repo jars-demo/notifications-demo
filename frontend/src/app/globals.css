@@ -1,0 +1,424 @@
+@import 'tailwindcss';
+
+/* Once, in order, on time: a sorting office. Newsprint paper, black ink, black bands like the
+   belts in a depot, and one signal yellow for the brand and nothing else. Three status colours,
+   always with an icon and a word: green is sent, blue is held, red is a failure: lost, sent
+   twice, or too late.
+   Every text pair is checked in tests/unit/tokens.test.ts. */
+:root {
+  --canvas: #f2f1ec;
+  --surface: #ffffff;
+  --surface-2: #e8e7e0;
+  --ink: #121211;
+  --ink-2: #3b3a36;
+  --muted: #5c5b55;
+  --rule: #d9d7ce;
+  --rule-strong: #b3b0a5;
+  --signal: #ffc61a;
+  --signal-deep: #7a5800;
+  --night: #141413;
+  --night-2: #232321;
+  --night-rule: #3a3936;
+  --on-night: #f2f1ec;
+  --on-night-muted: #b0aea5;
+  --sent: #126b38;
+  --sent-wash: #e0f0e5;
+  --lost: #b3261e;
+  --lost-wash: #fbe6e3;
+  --held: #1f4fb8;
+  --held-wash: #e4ebfa;
+  --code-bg: #191917;
+  --code-ink: #eceae2;
+  --code-muted: #a9a69c;
+  --code-lost: #ff9f93;
+  --code-sent: #8fd6a6;
+  --code-rule: #302f2c;
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  color-scheme: light;
+}
+
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-muted: var(--muted);
+  --color-rule: var(--rule);
+  --color-rule-strong: var(--rule-strong);
+  --color-signal: var(--signal);
+  --color-signal-deep: var(--signal-deep);
+  --color-night: var(--night);
+  --color-night-2: var(--night-2);
+  --color-night-rule: var(--night-rule);
+  --color-on-night: var(--on-night);
+  --color-on-night-muted: var(--on-night-muted);
+  --color-sent: var(--sent);
+  --color-sent-wash: var(--sent-wash);
+  --color-lost: var(--lost);
+  --color-lost-wash: var(--lost-wash);
+  --color-held: var(--held);
+  --color-held-wash: var(--held-wash);
+  --color-code-bg: var(--code-bg);
+  --color-code-ink: var(--code-ink);
+  --color-code-muted: var(--code-muted);
+  --color-code-lost: var(--code-lost);
+  --color-code-sent: var(--code-sent);
+  --color-code-rule: var(--code-rule);
+  --font-sans: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-redhat-mono), ui-monospace, monospace;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: var(--font-sans);
+}
+
+::selection {
+  background: var(--signal);
+  color: var(--ink);
+}
+
+/* A focus ring you cannot miss: black on paper, yellow on the black bands. */
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+
+.on-night :focus-visible {
+  outline-color: var(--signal);
+}
+
+/* Headings are set wide and heavy, like the lettering on a sorting frame. */
+.display {
+  font-family: var(--font-sans);
+  font-stretch: 118%;
+  font-variation-settings: 'wdth' 118;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+/* A small printed label: mono, spaced, upper case. */
+.label {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.on-night .label {
+  color: var(--on-night-muted);
+}
+
+/* The yellow tag. Only the brand uses this colour. */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.2rem 0.55rem;
+  background: var(--signal);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* A slip: a white card with a hard black edge, like a label stuck on a parcel. */
+.slip {
+  background: var(--surface);
+  border: 1.5px solid var(--ink);
+  box-shadow: 4px 4px 0 var(--ink);
+}
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--rule-strong);
+}
+
+.code {
+  background: var(--code-bg);
+  color: var(--code-ink);
+  font-family: var(--font-mono);
+}
+
+code,
+pre,
+.code {
+  font-variant-ligatures: none;
+}
+
+/* The digest board: the clock hand sweeps across the day. */
+.sweep {
+  transition: left 120ms linear;
+}
+
+.pip-wing {
+  animation: pip-wing 6s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: 20% 30%;
+}
+
+@keyframes pip-wing {
+  0%,
+  88%,
+  100% {
+    transform: rotate(0deg);
+  }
+  92% {
+    transform: rotate(-9deg);
+  }
+  96% {
+    transform: rotate(3deg);
+  }
+}
+
+.pip-blink {
+  animation: pip-blink 6.5s infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+@keyframes pip-blink {
+  0%,
+  95%,
+  100% {
+    transform: scaleY(1);
+  }
+  97% {
+    transform: scaleY(0.1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sweep {
+    transition: none;
+  }
+
+  .pip-wing,
+  .pip-blink {
+    animation: none;
+  }
+
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* Chapter prose. */
+.prose-post {
+  font-size: 17.5px;
+  line-height: 1.7;
+  color: var(--ink-2);
+}
+
+.prose-post h2 {
+  scroll-margin-top: 1.5rem;
+  margin: 3.25rem 0 0.9rem;
+  padding-top: 0.9rem;
+  border-top: 3px solid var(--ink);
+  font-family: var(--font-sans);
+  font-stretch: 115%;
+  font-variation-settings: 'wdth' 115;
+  font-size: 1.45rem;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+
+.prose-post h2 .anchor {
+  display: inline-flex;
+  min-width: 40px;
+  min-height: 40px;
+  align-items: center;
+  justify-content: center;
+  margin: -0.5rem 0 -0.5rem 0.25rem;
+  vertical-align: middle;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.8em;
+  text-decoration: none;
+  opacity: 0;
+}
+
+.prose-post h2:hover .anchor,
+.prose-post h2 .anchor:focus-visible {
+  opacity: 1;
+}
+
+.prose-post h3 {
+  margin: 2.25rem 0 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+
+.prose-post p,
+.prose-post ul,
+.prose-post ol {
+  margin: 0.9rem 0;
+}
+
+.prose-post ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.prose-post ul > li {
+  position: relative;
+  padding-left: 1.4rem;
+  margin: 0.5rem 0;
+}
+
+.prose-post ul > li::before {
+  content: '';
+  position: absolute;
+  left: 0.15rem;
+  top: 0.68em;
+  width: 0.5rem;
+  height: 0.5rem;
+  background: var(--ink);
+}
+
+.prose-post ol {
+  padding-left: 1.7rem;
+}
+
+.prose-post ol > li {
+  margin: 0.5rem 0;
+  padding-left: 0.3rem;
+}
+
+.prose-post ol > li::marker {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.prose-post a {
+  color: var(--ink);
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-color: var(--signal);
+  text-decoration-thickness: 3px;
+  text-underline-offset: 3px;
+}
+
+.prose-post strong {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.prose-post blockquote {
+  margin: 1.5rem 0;
+  padding: 0.25rem 0 0.25rem 1.1rem;
+  border-left: 4px solid var(--signal);
+}
+
+.prose-post :not(pre) > code {
+  padding: 0.08rem 0.32rem;
+  background: var(--surface-2);
+  font-family: var(--font-mono);
+  font-size: 0.84em;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.prose-post .code-block {
+  margin: 1.4rem 0;
+  overflow: hidden;
+  background: var(--code-bg);
+  border-left: 4px solid var(--code-rule);
+}
+
+.prose-post .code-block.is-output {
+  border-left-color: var(--signal);
+}
+
+.prose-post .code-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.35rem 0.5rem 0.35rem 0.95rem;
+  border-bottom: 1px solid var(--code-rule);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--code-muted);
+}
+
+.prose-post .code-block pre {
+  margin: 0;
+  overflow-x: auto;
+  padding: 0.9rem 1rem 1rem;
+  color: var(--code-ink);
+  font-family: var(--font-mono);
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+
+.prose-post .table-wrap {
+  margin: 1.4rem 0;
+  overflow-x: auto;
+  border: 1px solid var(--rule-strong);
+  background: var(--surface);
+}
+
+.prose-post table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.prose-post th,
+.prose-post td {
+  padding: 0.6rem 0.9rem;
+  border-bottom: 1px solid var(--rule);
+  text-align: left;
+  vertical-align: top;
+}
+
+.prose-post th {
+  background: var(--surface-2);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+
+.prose-post td code {
+  white-space: nowrap;
+}
+
+.prose-post tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+@media (max-width: 480px) {
+  .prose-post {
+    font-size: 17px;
+  }
+
+  .prose-post .code-block pre {
+    font-size: 12px;
+  }
+}
