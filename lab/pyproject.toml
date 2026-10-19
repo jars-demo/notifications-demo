@@ -1,7 +1,7 @@
 [project]
 name = "notifications-lab"
 version = "0.1.0"
-description = "Notifications that arrive once, in order, at the right time: eight real bugs in one small parcel company."
+description = "Notifications that arrive once, in order, on time: ten bugs in a real notification service."
 license = "MIT"
 requires-python = ">=3.13"
 dependencies = []

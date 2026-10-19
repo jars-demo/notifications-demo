@@ -1,10 +1,9 @@
-"""Case 01: the text for a parcel that never left.
+"""Case 01: the invitation to a team that never happened.
 
-At seven every morning the dispatcher puts parcels on vans and texts each customer. The text goes
-out from inside the database transaction. When a van is full the transaction rolls back and the
-parcel stays in the depot, but the text has already gone. A customer waits all day for a parcel
-that is still on a shelf.
-Run it: uv run python -m dove run 1
+A workspace admin invites people. The service adds a membership, emails the invite, and takes a
+seat on the workspace's plan, all inside one database transaction. When the plan is full, the
+seat CHECK fails and the transaction rolls back: no membership. But the email has already gone.
+Run it: uv run python -m notify run 1
 """
 
 import sqlite3
@@ -13,49 +12,44 @@ from contextlib import contextmanager
 
 
 class Crash(Exception):
-    """The dispatcher process dies. Whatever was committed stays committed."""
+    """The API process dies. Whatever was committed stays committed."""
 
 
-class Sms:
-    """The SMS gateway. Once send returns, the text is on the customer's phone."""
+class EmailProvider:
+    """The email provider. Once send returns, the email is in the recipient's inbox."""
 
     def __init__(self) -> None:
         self.sent: list[tuple[str, str]] = []
 
-    def send(self, phone: str, body: str) -> None:
-        self.sent.append((phone, body))
+    def send(self, to: str, subject: str) -> None:
+        self.sent.append((to, subject))
 
 
-PARCELS = [
-    ("DC-1041", "Amara", "+44 7700 900101", 7),
-    ("DC-1042", "Ben", "+44 7700 900102", 7),
-    ("DC-1043", "Noor", "+44 7700 900103", 3),
-    ("DC-1044", "Chen", "+44 7700 900104", 7),
-    ("DC-1045", "Iris", "+44 7700 900105", 3),
+INVITES = [
+    ("ws_acme", "dana@example.com"),
+    ("ws_acme", "eli@example.com"),
+    ("ws_orbit", "fay@example.com"),
+    ("ws_acme", "gus@example.com"),
+    ("ws_orbit", "hal@example.com"),
 ]
-VANS = {7: 3, 3: 0}  # van number: free space this morning. Van 3 came back full of returns.
+SEATS = {"ws_acme": 3, "ws_orbit": 0}  # free seats. ws_orbit is on a plan that is already full.
 
 
-class Depot:
-    def __init__(self, sms: Sms) -> None:
-        self.sms = sms
+class Service:
+    def __init__(self, email: EmailProvider) -> None:
+        self.email = email
         self.db = sqlite3.connect(":memory:", isolation_level=None)
         self.db.executescript(
             """
-            CREATE TABLE parcels (id TEXT PRIMARY KEY, customer TEXT, phone TEXT,
-                                  status TEXT, van INTEGER);
-            CREATE TABLE vans (id INTEGER PRIMARY KEY, space INTEGER CHECK (space >= 0));
-            CREATE TABLE outbox (id INTEGER PRIMARY KEY, phone TEXT, body TEXT,
+            CREATE TABLE workspaces (id TEXT PRIMARY KEY, free_seats INTEGER
+                                     CHECK (free_seats >= 0));
+            CREATE TABLE memberships (workspace TEXT, email TEXT, PRIMARY KEY (workspace, email));
+            CREATE TABLE outbox (id INTEGER PRIMARY KEY, recipient TEXT, subject TEXT,
                                  sent INTEGER DEFAULT 0);
             """
         )
-        for parcel_id, customer, phone, _ in PARCELS:
-            self.db.execute(
-                "INSERT INTO parcels VALUES (?, ?, ?, 'in the depot', NULL)",
-                (parcel_id, customer, phone),
-            )
-        for van, space in VANS.items():
-            self.db.execute("INSERT INTO vans VALUES (?, ?)", (van, space))
+        for workspace, seats in SEATS.items():
+            self.db.execute("INSERT INTO workspaces VALUES (?, ?)", (workspace, seats))
         self.crash_after_next_commit = False
         self.fail_next_commit = False
 
@@ -76,72 +70,69 @@ class Depot:
             self.crash_after_next_commit = False
             raise Crash
 
-    def dispatch(self, parcel_id: str, van: int) -> None:
+    def invite(self, workspace: str, email: str) -> None:
         with self.transaction():
+            self.db.execute("INSERT INTO memberships VALUES (?, ?)", (workspace, email))
+            subject = f"You have been added to {workspace}"
+            self.email.send(email, subject)
+            # Fails with an IntegrityError when the workspace has no free seat.
             self.db.execute(
-                "UPDATE parcels SET status = 'out for delivery', van = ? WHERE id = ?",
-                (van, parcel_id),
+                "UPDATE workspaces SET free_seats = free_seats - 1 WHERE id = ?", (workspace,)
             )
-            customer, phone = self.db.execute(
-                "SELECT customer, phone FROM parcels WHERE id = ?", (parcel_id,)
-            ).fetchone()
-            self.sms.send(phone, f"Hi {customer}, {parcel_id} is out for delivery on van {van}.")
-            # Fails with an IntegrityError when the van has no space left.
-            self.db.execute("UPDATE vans SET space = space - 1 WHERE id = ?", (van,))
 
     def relay(self) -> None:
         """Send whatever is waiting in the outbox, oldest first. It runs every few seconds."""
         rows = self.db.execute(
-            "SELECT id, phone, body FROM outbox WHERE sent = 0 ORDER BY id"
+            "SELECT id, recipient, subject FROM outbox WHERE sent = 0 ORDER BY id"
         ).fetchall()
-        for row_id, phone, body in rows:
-            self.sms.send(phone, body)
+        for row_id, recipient, subject in rows:
+            self.email.send(recipient, subject)
             self.db.execute("UPDATE outbox SET sent = 1 WHERE id = ?", (row_id,))
 
-    def status(self, parcel_id: str) -> str:
-        return self.db.execute("SELECT status FROM parcels WHERE id = ?", (parcel_id,)).fetchone()[
-            0
-        ]
+    def is_member(self, workspace: str, email: str) -> bool:
+        row = self.db.execute(
+            "SELECT 1 FROM memberships WHERE workspace = ? AND email = ?", (workspace, email)
+        ).fetchone()
+        return row is not None
 
 
-def morning(
+def batch(
     crash_after: str | None = None, fail_commit: str | None = None
-) -> tuple[Depot, Sms, list[str]]:
-    """Put every parcel on its van. If crash_after names a parcel, the process dies straight
-    after that parcel's commit, and a fresh dispatcher picks up where it left off. If
-    fail_commit names one, the database refuses that parcel's commit."""
-    sms = Sms()
-    depot = Depot(sms)
+) -> tuple[Service, EmailProvider, list[str]]:
+    """Send every invite. If crash_after names an email, the process dies straight after that
+    invite's commit, and a restarted process carries on. If fail_commit names one, the database
+    refuses that invite's commit."""
+    email = EmailProvider()
+    service = Service(email)
     log = []
-    for parcel_id, _, _, van in PARCELS:
-        depot.crash_after_next_commit = parcel_id == crash_after
-        depot.fail_next_commit = parcel_id == fail_commit
+    for workspace, address in INVITES:
+        service.crash_after_next_commit = address == crash_after
+        service.fail_next_commit = address == fail_commit
         try:
-            depot.dispatch(parcel_id, van)
-            log.append(f"{parcel_id}  van {van}  out for delivery")
+            service.invite(workspace, address)
+            log.append(f"{address:<18} {workspace:<9} added")
         except sqlite3.IntegrityError:
-            log.append(f"{parcel_id}  van {van}  van full, stays in the depot")
+            log.append(f"{address:<18} {workspace:<9} no free seat, rolled back")
         except sqlite3.OperationalError:
-            log.append(f"{parcel_id}  van {van}  commit failed, stays in the depot")
+            log.append(f"{address:<18} {workspace:<9} commit failed, rolled back")
         except Crash:
-            log.append(f"{parcel_id}  van {van}  committed, then the dispatcher crashed")
-            depot.sms = sms  # the restarted process talks to the same gateway
-        depot.relay()
-    return depot, sms, log
+            log.append(f"{address:<18} {workspace:<9} committed, then the process crashed")
+        service.relay()
+    return service, email, log
 
 
 def run() -> None:
-    depot, sms, log = morning()
-    print(f"dispatching {len(PARCELS)} parcels")
+    service, email, log = batch()
+    print(f"sending {len(INVITES)} invitations")
     for line in log:
         print(f"  {line}")
     print()
-    print(f"texts sent: {len(sms.sent)}")
+    print(f"emails sent: {len(email.sent)}")
     wrong = [
-        (parcel_id, customer)
-        for parcel_id, customer, phone, _ in PARCELS
-        if depot.status(parcel_id) == "in the depot" and any(p == phone for p, _ in sms.sent)
+        (address, workspace)
+        for workspace, address in INVITES
+        if not service.is_member(workspace, address) and any(to == address for to, _ in email.sent)
     ]
-    print(f"texts for parcels still in the depot: {len(wrong)}")
-    for parcel_id, customer in wrong:
-        print(f"  {customer} was told {parcel_id} is out for delivery. It is on a shelf.")
+    print(f"emails for memberships that do not exist: {len(wrong)}")
+    for address, workspace in wrong:
+        print(f"  {address} was told they joined {workspace}. They did not.")

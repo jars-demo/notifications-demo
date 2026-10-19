@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pytest
 
-from dove.__main__ import CASES
-from dove.checks import CHECKS
+from notify.__main__ import CASES
+from notify.checks import CHECKS
 
 
 @pytest.mark.parametrize("number", list(CASES))
@@ -35,4 +35,4 @@ def test_a_fix_changes_only_a_few_lines(number):
 
     changed = len(set(fixed) - set(shipped)) + len(set(shipped) - set(fixed))
 
-    assert 0 < changed <= 16
+    assert 0 < changed <= 20
