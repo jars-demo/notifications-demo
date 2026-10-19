@@ -1,57 +1,57 @@
 # Once, in order, on time
 
-A hands-on notifications workshop. Eight chapters, each explaining one idea in depth, each with a real bug in a small parcel company called Dovecote for you to fix: the transactional outbox, idempotency keys, ordering, permanent errors and backoff, quiet hours across time zones, digests, priority lanes and signed webhooks. **Pip**, the carrier pigeon who flies Dovecote's post, quizzes you along the way.
+A hands-on notifications workshop in ten chapters. Each chapter explains one idea behind every email, push and SMS a product sends, and hands you a real bug in a small notification service to fix: the transactional outbox, idempotency keys, permanent failures, backoff and jitter, ordering, preferences and consent, quiet hours across time zones, digests, priority lanes and signed webhooks.
 
 **Workshop site:** [notifications.jishanahmed.in](https://notifications.jishanahmed.in)
 
 ## Quick start
 
-You need [uv](https://docs.astral.sh/uv/) and git. uv installs Python for you. The lab uses the Python standard library only.
+You need [uv](https://docs.astral.sh/uv/) and git. uv installs Python for you. The lab uses the Python standard library only: the email provider and the webhooks run on localhost.
 
 ```bash
 git clone https://github.com/jars-demo/notifications-demo.git
 cd notifications-demo/lab
 uv sync
-uv run python -m dove run 1
+uv run python -m notify run 1
 ```
 
 ## How a case works
 
-| Command                             | What it does                                                   |
-| ----------------------------------- | -------------------------------------------------------------- |
-| `uv run python -m dove list`        | every case, and which ones are fixed                           |
-| `uv run python -m dove run N`       | run case N and watch the bug happen                            |
-| `uv run python -m dove check N`     | check your fix: the bug is gone, and the message still arrives |
-| `uv run python -m dove hint N`      | a nudge from Pip                                               |
-| `uv run python -m dove try fanout`  | 2,000 pushes to a local HTTP server, one by one or batched     |
-| `uv run python -m dove try outbox`  | what an outbox row costs in a real SQLite commit               |
-| `uv run python -m dove try backoff` | 1,000 phones retry through an outage, with and without jitter  |
-| `uv run python -m dove try digest`  | the same updates through four batching rules                   |
+| Command | What it does |
+| --- | --- |
+| `uv run python -m notify list` | every case, and which ones are fixed |
+| `uv run python -m notify run N` | run case N and watch the bug happen |
+| `uv run python -m notify check N` | check your fix: the bug is gone, and the message still arrives |
+| `uv run python -m notify hint N` | a nudge, one step at a time |
+| `uv run python -m notify try fanout` | 2,000 pushes to a local HTTP server, one by one or batched |
+| `uv run python -m notify try outbox` | what an outbox row costs in a real SQLite commit |
+| `uv run python -m notify try backoff` | 1,000 senders retry through an outage, four ways |
+| `uv run python -m notify try digest` | the same updates through four batching rules |
 
-Fix the code in `lab/cases/`. Start a case over with `git restore cases/` from `lab/`.
-
-Every check tests that the message still arrives, so sending nothing is never a fix.
+Fix the code in `lab/cases/`. Start a case over with `git restore cases/` from `lab/`. Every check tests that the message still arrives, so sending nothing is never a fix.
 
 ## The chapters
 
-| #   | Chapter                                                     | The case                                  |
-| --- | ----------------------------------------------------------- | ----------------------------------------- |
-| 01  | [Send after commit: the outbox](workshop/01-the-outbox.md)  | The text for a parcel that never left     |
-| 02  | [Once, even when you retry](workshop/02-idempotency.md)     | Delivered, delivered, delivered           |
-| 03  | [Out of order](workshop/03-ordering.md)                     | Delivered, then out for delivery          |
-| 04  | [Errors that never heal](workshop/04-permanent-failures.md) | The phone that no longer exists           |
-| 05  | [Quiet hours and time zones](workshop/05-quiet-hours.md)    | The 3 a.m. buzz                           |
-| 06  | [Batching without silence](workshop/06-digests.md)          | Silence at the busy shop                  |
-| 07  | [Priority lanes](workshop/07-priority.md)                   | The login code that came too late         |
-| 08  | [Webhooks you can trust](workshop/08-webhooks.md)           | The receipt that came back from yesterday |
+| # | Chapter | The case |
+| --- | --- | --- |
+| 01 | [Send after commit: the outbox](workshop/01-the-outbox.md) | The invitation to a team that never happened |
+| 02 | [Once, even when you retry](workshop/02-idempotency.md) | One payment, four receipts |
+| 03 | [Errors that never heal](workshop/03-permanent-failures.md) | The device that no longer exists |
+| 04 | [Backoff and jitter](workshop/04-backoff-and-jitter.md) | The retry storm |
+| 05 | [Out of order](workshop/05-ordering.md) | Live, then building |
+| 06 | [Preferences and consent](workshop/06-preferences.md) | The newsletter after the unsubscribe |
+| 07 | [Quiet hours and time zones](workshop/07-quiet-hours.md) | The 3 a.m. buzz |
+| 08 | [Batching without silence](workshop/08-digests.md) | The digest that never went out |
+| 09 | [Priority lanes](workshop/09-priority.md) | The sign-in code that came too late |
+| 10 | [Webhooks you can trust](workshop/10-webhooks.md) | The delivery receipt from yesterday |
 
-About two and three quarter hours in all. Chapter 08 ends with a ten point checklist.
+About three and a half hours in all. Chapter 10 ends with a ten point production checklist.
 
 ## Layout
 
 ```text
-lab/cases/            the eight cases: one real notification bug each
-lab/dove/             the CLI, the checks and the four experiments
+lab/cases/            the ten cases: one real notification bug each
+lab/notify/           the CLI, the checks, the local email provider and the experiments
 lab/tests/            every case fails as shipped, passes when fixed, and rejects common wrong fixes
 workshop/             the chapters, in Markdown
 frontend/             the workshop site (Next.js), which renders workshop/
@@ -67,7 +67,7 @@ npm ci
 npm run dev
 ```
 
-`npm run verify` runs lint, type checks, formatting, unit tests and a production build. For the browser tests, build and start the site, then run Playwright against it:
+`npm run verify` runs lint, types, formatting, unit tests and a production build. Browser tests:
 
 ```bash
 npm run build && npx next start -p 3114
