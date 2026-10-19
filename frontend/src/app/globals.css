@@ -1,0 +1,389 @@
+@import 'tailwindcss';
+
+/*
+  Once, in order, on time. Warm paper, ink, and one orange for emphasis, in the Receipts design
+  language. Glass is for floating chrome only; code always sits on a solid surface.
+  Every colour pair that carries text is checked for WCAG AA in tests/unit/tokens.test.ts.
+*/
+:root {
+  --canvas: #fbf8f1;
+  --surface: #ffffff;
+  --surface-2: #f3efe6;
+  --ink: #141412;
+  --ink-2: #34322d;
+  --muted: #6b675f;
+  --hairline: rgb(20 20 18 / 0.08);
+  --hairline-strong: rgb(20 20 18 / 0.14);
+
+  --accent: #ff5a1f;
+  --accent-on: #141412;
+  --accent-text: #c2410c;
+  --accent-wash: #fff1ea;
+
+  --ok: #15803d;
+  --ok-wash: #ecfdf3;
+  --bad: #b91c1c;
+  --bad-wash: #fef2f2;
+
+  --code-bg: #1c1b18;
+  --code-head: #282622;
+  --code-ink: #f5f2ea;
+  --code-muted: #b5ae9f;
+  --code-ok: #86efac;
+  --code-bad: #fca5a5;
+  --code-accent: #ffb38a;
+
+  --glass-fill: rgb(255 255 255 / 0.62);
+  --glass-edge: rgb(255 255 255 / 0.85);
+  --glass-line: rgb(20 20 18 / 0.06);
+  --shadow-soft: 0 1px 1px rgb(20 20 18 / 0.02), 0 6px 20px rgb(20 20 18 / 0.05);
+  --shadow-lift: 0 1px 2px rgb(20 20 18 / 0.03), 0 24px 64px rgb(20 20 18 / 0.09);
+  --ambient:
+    radial-gradient(44% 50% at 12% 4%, rgb(255 205 175 / 0.55) 0%, transparent 70%),
+    radial-gradient(40% 46% at 90% 0%, rgb(240 226 200 / 0.8) 0%, transparent 70%),
+    radial-gradient(36% 40% at 80% 64%, rgb(255 218 196 / 0.3) 0%, transparent 70%);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  color-scheme: light;
+}
+
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-muted: var(--muted);
+  --color-hairline: var(--hairline);
+  --color-hairline-strong: var(--hairline-strong);
+  --color-accent: var(--accent);
+  --color-accent-on: var(--accent-on);
+  --color-accent-text: var(--accent-text);
+  --color-accent-wash: var(--accent-wash);
+  --color-ok: var(--ok);
+  --color-ok-wash: var(--ok-wash);
+  --color-bad: var(--bad);
+  --color-bad-wash: var(--bad-wash);
+  --color-code-bg: var(--code-bg);
+  --color-code-head: var(--code-head);
+  --color-code-ink: var(--code-ink);
+  --color-code-muted: var(--code-muted);
+  --color-code-ok: var(--code-ok);
+  --color-code-bad: var(--code-bad);
+  --color-code-accent: var(--code-accent);
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, 'SFMono-Regular', monospace;
+  --font-display: var(--font-instrument-serif), ui-serif, Georgia, serif;
+
+  --radius-card: 1.25rem;
+  --radius-panel: 1.75rem;
+}
+
+html {
+  scroll-padding-top: 6rem;
+}
+
+body {
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  letter-spacing: -0.006em;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: var(--ambient);
+  pointer-events: none;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--accent-on);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 0.5rem;
+}
+
+.eyebrow {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* ---------- Glass: floating chrome only ---------- */
+
+.glass {
+  background: var(--glass-fill);
+  -webkit-backdrop-filter: blur(24px) saturate(170%);
+  backdrop-filter: blur(24px) saturate(170%);
+  box-shadow:
+    inset 0 1px 0 var(--glass-edge),
+    0 0 0 1px var(--glass-line),
+    var(--shadow-soft);
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass {
+    background: var(--surface);
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .glass {
+    background: var(--surface);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+.card {
+  background: var(--surface);
+  border-radius: var(--radius-card);
+  box-shadow:
+    0 0 0 1px var(--hairline),
+    var(--shadow-soft);
+}
+
+.lift {
+  transition:
+    transform 260ms var(--ease-out),
+    box-shadow 260ms var(--ease-out);
+}
+
+.lift:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 0 0 1px var(--hairline-strong),
+    var(--shadow-lift);
+}
+
+.text-gradient {
+  background: linear-gradient(100deg, #c2410c 0%, #ea580c 45%, #b4532a 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  padding-right: 0.06em;
+}
+
+.terminal {
+  background: var(--code-bg);
+  color: var(--code-ink);
+  border-radius: var(--radius-card);
+  font-family: var(--font-mono);
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+
+.rise {
+  animation: rise 700ms var(--ease-out) both;
+  animation-delay: var(--delay, 0ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ---------- Chapter prose ---------- */
+
+.prose-notify {
+  font-size: 17px;
+  line-height: 1.72;
+  color: var(--ink-2);
+}
+
+.prose-notify > * + * {
+  margin-top: 1.1em;
+}
+
+.prose-notify h2 {
+  margin-top: 2.2em;
+  font-family: var(--font-display);
+  font-size: 36px;
+  line-height: 1.1;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  text-wrap: balance;
+}
+
+.prose-notify > h2:first-child {
+  margin-top: 0;
+}
+
+.prose-notify h2 .anchor {
+  margin-left: 0.3em;
+  font-family: var(--font-sans);
+  font-size: 0.6em;
+  color: var(--accent-text);
+  text-decoration: none;
+  opacity: 0;
+}
+
+.prose-notify h2:hover .anchor,
+.prose-notify h2 .anchor:focus-visible {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .prose-notify h2 .anchor {
+    display: none;
+  }
+}
+
+.prose-notify h3 {
+  margin-top: 1.8em;
+  font-size: 19px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.prose-notify ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.prose-notify ul > li {
+  position: relative;
+  padding-left: 1.3em;
+}
+
+.prose-notify ul > li + li,
+.prose-notify ol > li + li {
+  margin-top: 0.4em;
+}
+
+.prose-notify ul > li::before {
+  content: '';
+  position: absolute;
+  left: 0.15em;
+  top: 0.7em;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--accent);
+}
+
+.prose-notify ol {
+  list-style: decimal;
+  padding-left: 1.4em;
+}
+
+.prose-notify ol > li::marker {
+  color: var(--accent-text);
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}
+
+.prose-notify a {
+  color: var(--accent-text);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.prose-notify strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.prose-notify blockquote {
+  border-left: 3px solid var(--accent);
+  background: var(--accent-wash);
+  border-radius: 0 12px 12px 0;
+  padding: 0.8em 1em;
+  color: var(--ink);
+}
+
+.prose-notify :not(pre) > code {
+  font-family: var(--font-mono);
+  font-size: 0.86em;
+  background: var(--surface-2);
+  border-radius: 6px;
+  padding: 0.12em 0.4em;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.prose-notify .code-block {
+  overflow: hidden;
+  border-radius: var(--radius-card);
+  background: var(--code-bg);
+}
+
+.prose-notify .code-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 4px 6px 4px 16px;
+  background: var(--code-head);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--code-muted);
+}
+
+.prose-notify .code-block pre {
+  overflow-x: auto;
+  padding: 14px 18px 18px;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--code-ink);
+}
+
+.prose-notify .code-block.is-output pre {
+  color: var(--code-muted);
+}
+
+.prose-notify .table-wrap {
+  overflow-x: auto;
+  background: var(--surface);
+  border-radius: var(--radius-card);
+  box-shadow: 0 0 0 1px var(--hairline);
+}
+
+.prose-notify table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.prose-notify th,
+.prose-notify td {
+  padding: 10px 14px;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.prose-notify tr:last-child td {
+  border-bottom: 0;
+}
+
+.prose-notify th {
+  background: var(--surface-2);
+  color: var(--ink);
+  font-weight: 600;
+  white-space: nowrap;
+}
